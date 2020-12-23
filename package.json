@@ -1,0 +1,21 @@
+{
+  "name": "com.gitbetter.behave",
+  "version": "1.0.0",
+  "displayName": "Behave",
+  "description": "A simple node-based editor for creating and editing behavior trees, with an intuitive C# API.",
+  "unity": "2020.2",
+  "unityRelease": "0f1",
+  "keywords": [
+    "behavior",
+    "behave",
+    "node",
+    "editor",
+    "AI",
+    "tree"
+  ],
+  "author": {
+    "name": "Adrian Sanchez",
+    "url": "https://github.com/gitbetter"
+  },
+  "type": "tool"
+}
