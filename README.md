@@ -1,19 +1,34 @@
 # Behave
 
-Behave is a simple Unity node-based editor for creating and editing behavior trees, with an intuitive C# API.
+Behave is a simple, Unity node-based editor for creating and editing behavior trees, with an intuitive C# API.
 
 ## Installation
 
-To setup Behave in your project simply got to _Window -> Package Manager_, click the _+_ icon on the top left and select _Add package from git URL_ to add the Behave git URL.
+To setup Behave in your project simply go to _Window -> Package Manager_, click the _+_ icon on the top left and select _Add package from git URL_ to add the Behave git URL.
 
 ## Usage
 
 You can now make a new behavior tree by going to _Assets -> Create -> Behavior Tree Editor -> Behavior Tree_.
-After editing your behavior tree with the editor, you can reference the generated scriptable asset file from any of your scripts and use the `Root` property to access the root of the generated behavior tree. The `Root` property is of type `BehaviorTree`, which derives indirectly from the abstract `Task` class, which provides a common interface into a behavior tree task. Functionality and extensibility is described in the sections below.
+After editing your behavior tree with the editor, you can reference the generated scriptable asset file from any of your scripts and use the `Root` property to access the root of the generated behavior tree. 
+```csharp
+public class BehaviorTreeLoader : MonoBehaviour {
+    [SerializeField]
+    public TreeGraph treeGraph;
+    
+    BehaviorTree tree;
+    
+    void Start() {
+        tree = treeGraph.Root;
+        Debug.Log(tree.ToString());
+    }
+}
+```
+The `Root` property is of type `BehaviorTree`, which derives indirectly from the abstract `Task` class, which provides a common interface into a behavior tree task. Functionality and extensibility is described in the sections below.
 
 ## Behavior Tree API
 
 The behavior tree API is based on a `Task` abstract class that can be derived to provide custom functionality. You can derive from `Task` and provide a `bool Run(Blackboard board)` override to create your own task, or use one of the provided tasks. The built-in tasks are:
+
 * Selector
 * Sequence
 * NonDeterministicSelector
@@ -45,7 +60,7 @@ Task behaviorTree = new Sequence(
     )
 );
 ```
-The resulting behavior tree will automatically be generated every time you access the `Root` property of your editor generated scriptable object, so it is recommended that you cache the result of `Root` somewhere in your script.
+The resulting behavior tree will automatically be generated every time you access the `Root` property of your editor generated `TreeGraph` scriptable object, so it is recommended that you cache the result of `Root` somewhere in your script.
 
 ## Extending Behavior Tree
 
@@ -79,9 +94,12 @@ public class CustomTaskWithProperties : Task {
 }
 ```
 
+Take a look at the files in _Runtime/Data Structures/BehaviorTree_ to get a feel for the `Task` interface and how all the subclasses are implemented.
+
 ## Extending Editor Properties
 
-The behavior tree editor also includes a set of properties that you can link into any node to provide values to fields. All of these properties extend from the abstract `Property` class, which has a single `object` field named `value`. The visual property types include:
+The behavior tree editor also includes a set of visual properties that you can link into any node to provide values to fields. All of these properties extend from the abstract `Property` class, which has a single `object` field named `value`. The visual property types include:
+
 * IntProperty
 * FloatProperty
 * BoolProperty
@@ -98,7 +116,7 @@ public class CustomProperty : Property {
 
 ## Blackboards
 
-Behave includes a simple blackboard data structure definition to be used in saving and sharing data within your behavior trees or as a general centralized data store across your application. Simply create a new `Blackboard`, adding and accessing `BlackboardDatum` instances using the `Set` and `Get` methods, respectively. Here's an example that saves a position into the blackboard
+Behave includes a simple blackboard data structure definition to be used in saving and sharing data within your behavior trees or as a general centralized data store across your application. Simply create a new `Blackboard`, adding and accessing `BlackboardDatum` instances using the `Set` and `Get` methods, respectively. Here's an example that saves a character position into the blackboard
 ```csharp
 Blackboard blackboard = new Blackboard();
 BlackboardDatum positionDatum = new BlackboardDatum("PlayerPosition", playerGO.transform.position);
