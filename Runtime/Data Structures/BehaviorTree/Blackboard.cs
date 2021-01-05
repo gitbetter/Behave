@@ -1,30 +1,14 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-public enum BlackboardType
-{
-    Bool,
-    Float,
-    Int,
-    String,
-    Vector3,
-    GameObject,
-    Transform,
-    InteractableObject,
-    TransferableObject,
-    Inventory
-}
-
 public class BlackboardDatum 
 {
     public string id;
-    public BlackboardType type;
     public object value;
 
-    public BlackboardDatum(string id, object value, BlackboardType type) {
+    public BlackboardDatum(string id, object value) {
         this.id = id;
         this.value = value;
-        this.type = type;
     }
 
     public T ConvertedValue<T>() {
