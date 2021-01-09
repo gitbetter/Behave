@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 
 public class BehaviorTreeEditor : EditorWindow {
-    private List<Node> nodes;
+    private Dictionary<string, Node> nodes;
     private List<Connection> connections;
 
     private GUISkin skin;
@@ -72,7 +72,7 @@ public class BehaviorTreeEditor : EditorWindow {
 
     private void DrawNodes() {
         if (nodes != null) {
-            foreach (Node node in nodes) {
+            foreach (Node node in nodes.Values) {
                 node.Draw();
             }
         }
@@ -126,7 +126,7 @@ public class BehaviorTreeEditor : EditorWindow {
 
     private void ProcessNodeEvents(Event e) {
         if (nodes != null) {
-            foreach (Node node in nodes) {
+            foreach (Node node in nodes.Values) {
                 bool guiChanged = node.ProcessEvents(e);
                 if (guiChanged) {
                     GUI.changed = true;
@@ -139,8 +139,10 @@ public class BehaviorTreeEditor : EditorWindow {
         GenericMenu genericMenu = new GenericMenu();
         foreach (System.Type type in nodeTypes) {
             NodeData data = new NodeData(type);
-            data.editorPosition = position;
-            genericMenu.AddItem(new GUIContent("Add Node/" + data.GetEditorAttributes().menuPath), false, () => OnClickAddNode(data));
+            if (data != null) {
+                data.SetEditorPosition(position);
+                genericMenu.AddItem(new GUIContent("Add Node/" + data.GetEditorAttributes().menuPath), false, () => OnClickAddNode(data));
+            }
         }
         genericMenu.ShowAsContext();
     }
@@ -181,7 +183,7 @@ public class BehaviorTreeEditor : EditorWindow {
         drag = delta;
 
         if (nodes != null) {
-            foreach (Node node in nodes) {
+            foreach (Node node in nodes.Values) {
                 node.Drag(delta);
             }
         }
@@ -191,7 +193,10 @@ public class BehaviorTreeEditor : EditorWindow {
 
     private Node CreateNode(NodeData data) {
         if (nodes == null) {
-            nodes = new List<Node>();
+            nodes = new Dictionary<string, Node>();
+        }
+        if (nodes.ContainsKey(data.id) && graphData.nodes.ContainsKey(data.id)) {
+            return nodes[data.id];
         }
         NodeParams nodeParams = new NodeParams() {
             dimensions = new Vector2(200, 90),
@@ -202,10 +207,10 @@ public class BehaviorTreeEditor : EditorWindow {
         };
         Node newNode = EditorFactories.NodeForType(Type.GetType(data.typeName), nodeParams);       
         newNode.OnRemoveNode = OnClickRemoveNode;
-        nodes.Add(newNode);
+        nodes[data.id] = (newNode);
 
-        if (graphData != null && !graphData.nodes.ContainsKey(data.id)) {
-            graphData.nodes.Add(data.id, data);
+        if (graphData != null) {
+            graphData.AddNodeData(data);
         }
 
         if (selectedOutPoint != null && selectedInPoint == null) {
@@ -234,10 +239,10 @@ public class BehaviorTreeEditor : EditorWindow {
             connectionsToRemove = null;
         }
 
-        nodes.Remove(node);
+        nodes.Remove(node.data.id);
 
         if (graphData != null) {
-            graphData.nodes.Remove(node.data.id);
+            graphData.RemoveNodeData(node.data);
         }
     }
 
@@ -261,6 +266,11 @@ public class BehaviorTreeEditor : EditorWindow {
     private void DeleteConnection(Connection connection) {
         connection.outPoint.node.data.RemoveChild(connection.inPoint.node.data.id);
         connection.inPoint.node.data.SetParentId(null);
+        if (connection.outPoint.node is PropertyNode && connection.inPoint.node is TreeNode) {
+            PropertyNode propNode = connection.outPoint.node as PropertyNode;
+            TreeNode treeNode = connection.inPoint.node as TreeNode;
+            treeNode.UnsetProperty(propNode.prop);
+        }
         connections.Remove(connection);
     }
 
@@ -272,6 +282,7 @@ public class BehaviorTreeEditor : EditorWindow {
     public void SetGraphData(TreeGraph graphData) {
         this.graphData = graphData;
         Dictionary<string, Node> created = new Dictionary<string, Node>();
+
         foreach (KeyValuePair<string, NodeData> entry in graphData.nodes) {
             if (!created.ContainsKey(entry.Key)) {
                 created.Add(entry.Key, CreateNode(entry.Value)); 
@@ -288,6 +299,15 @@ public class BehaviorTreeEditor : EditorWindow {
                     ConnectionPoint inPoint = created[id].FirstMatchingInPoint(outPoint);
                     CreateConnection(inPoint, outPoint);
                 }
+            }
+        }
+    }
+
+    public void ClearGraph() {
+        if (nodes != null) {
+            Dictionary<string, Node> nodesCopy = new Dictionary<string, Node>(nodes);
+            foreach (Node node in nodesCopy.Values) {
+                DeleteNode(node);
             }
         }
     }

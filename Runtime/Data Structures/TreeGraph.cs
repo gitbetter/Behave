@@ -5,10 +5,11 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "BehaviorTree", menuName = "Behavior Tree Editor/Behavior Tree", order = 1)]
 public class TreeGraph : ScriptableObject {
+    public Nodetionary nodes = new Nodetionary();
+    
     public BehaviorTree Root { get {
         return GenerateBehaviorTree();
     }}
-    public Nodetionary nodes = new Nodetionary();
 
     BehaviorTree GenerateBehaviorTree() {
         NodeData rootNode = null;
@@ -34,7 +35,7 @@ public class TreeGraph : ScriptableObject {
         FieldInfo[] fieldInfos = rootObjectType.GetFields();
         foreach (FieldInfo fInfo in fieldInfos) {
             if(root.fields.ContainsKey(fInfo.Name)) {
-                fInfo.SetValue(task, root.fields[fInfo.Name]);
+                fInfo.SetValue(task, root.fields[fInfo.Name].GetValue());
             }
         }
         foreach (string id in root.childrenIds) {
@@ -45,5 +46,23 @@ public class TreeGraph : ScriptableObject {
             }
         }
         return task;
+    }
+
+    public void AddNodeData(NodeData data) {
+        if (!this.nodes.ContainsKey(data.id)) {
+            this.nodes.Add(data.id, data);
+            Save();
+        }
+    }
+
+    public void RemoveNodeData(NodeData data) {
+        this.nodes.Remove(data.id);
+        Save(); 
+    }
+
+    public void Save() {
+        UnityEditor.EditorUtility.SetDirty(this);
+        UnityEditor.AssetDatabase.SaveAssets();
+        UnityEditor.AssetDatabase.Refresh();
     }
 }

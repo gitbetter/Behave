@@ -370,23 +370,25 @@ public class PerformInterruption : Task {
     }
 }
 
-[BTEditor("Behavior Tree/Blackboard Manager")]
-public class BlackboardManager : Decorator {
-    public BlackboardManager(Task task = null) : base(task) { }
-
-    public override bool Run(Blackboard blackboard)
-    {
-        Blackboard newBlackboard = new Blackboard();
-        newBlackboard.parent = blackboard;
-        bool result = child.Run(newBlackboard);
-        newBlackboard = null;
-        return result;
-    }
-}
-
 public class BehaviorTree : Decorator
 {
-    public BehaviorTree() { }
+    public Blackboard blackboard;
 
-    public BehaviorTree(Task task) : base(task) { }
+    public BehaviorTree() {
+        this.blackboard = new Blackboard();
+    }
+
+    public BehaviorTree(Task task) : base(task) {
+        this.blackboard = new Blackboard();
+    }
+
+    ~BehaviorTree() {
+        blackboard = null;
+    }
+
+    public override bool Run(Blackboard bb) {
+        this.blackboard.parent = bb;
+        bool result = child.Run(this.blackboard);
+        return result;
+    }
 }

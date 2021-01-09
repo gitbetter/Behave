@@ -9,7 +9,7 @@ To setup Behave in your project simply go to _Window -> Package Manager_, click 
 ## Usage
 
 You can now make a new behavior tree by going to _Assets -> Create -> Behavior Tree Editor -> Behavior Tree_.
-After editing your behavior tree with the editor, you can reference the generated scriptable asset file from any of your scripts and use the `Root` property to access the root of the generated behavior tree. 
+After editing your behavior tree with the editor, you can reference the generated scriptable asset file from any of your scripts and use the `Root` property to access the root of the generated behavior tree. You can then call the `public bool Run(Blackboard blackboard)` method to run an iteration of your behavior tree.
 ```csharp
 public class BehaviorTreeLoader : MonoBehaviour {
     [SerializeField]
@@ -20,6 +20,10 @@ public class BehaviorTreeLoader : MonoBehaviour {
     void Start() {
         tree = treeGraph.Root;
         Debug.Log(tree.ToString());
+    }
+
+    void Update() {
+    	tree.Run(myBlackboard);
     }
 }
 ```
@@ -42,7 +46,6 @@ The behavior tree API is based on a `Task` abstract class that can be derived to
 * Parallel
 * Interrupter
 * PerformInterruption
-* BlackboardManager
 * BehaviorTree
 
 In order to create a behavior tree programmatically, you can compose constructor calls for the desired tasks. Here's an example:
@@ -64,11 +67,13 @@ The resulting behavior tree will automatically be generated every time you acces
 
 ## Extending Behavior Tree
 
-You can derive from any of the aforementioned `Task` subclasses, or create your own `Task` subclass in order to extend the behavior tree implementation to suit your needs. In order for your task to show up as an editor context menu option when using the behavior tree editor, you need to add a `BTEditor` attribute to the top of your class definition. Here's an example:
+You can derive from any of the aforementioned `Task` subclasses, or create your own `Task` subclass and override the `Run(Blackboard blackboard)` method in order to extend the behavior tree implementation to suit your needs. In order for your task to show up as an editor context menu option when using the behavior tree editor, you need to add a `BTEditor` attribute to the top of your class definition. Here's an example:
 ```csharp
 [BTEditor("Behavior Tree/CustomTask1")]
 public class CustomTask1 : Task {
-    // Do some stuff
+    public override bool Run(Blackboard blackboard) {
+    	// Do some stuff
+    }
 }
 ```
 The argument to the `BTEditor` attribute specifies what the context menu path and name of the node should be. It is recommended that you use the "Behavior Tree/..." context menu path so that all behavior tree nodes are grouped together, but you are free to follow your own conventions.
@@ -76,7 +81,9 @@ The `BTEditor` attribute can also include an additional argument to specify a pa
 ```csharp
 [BTEditor("Behavior Tree/CustomDecorator1", texturePath = "some/texture/path/here")]
 public class CustomDecorator1 : Decorator {
-    // Do some stuff
+    public override bool Run(Blackboard blackboard) {
+    	// Do some stuff
+    }
 }
 ```
 In order to have class fields show up as node fields in the behavior tree editor, you should mark them with the `BTEditable` attribute
@@ -91,6 +98,10 @@ public class CustomTaskWithProperties : Task {
 
     [BTEditable]
     float sumSoFar;
+
+    public override bool Run(Blackboard blackboard) {
+    	// Do some stuff
+    }
 }
 ```
 
@@ -105,6 +116,7 @@ The behavior tree editor also includes a set of visual properties that you can l
 * BoolProperty
 * StringProperty
 * SemaphoreProperty
+* Vector3Property
 
 You can extend the `Property` abstract class to define your own visual properties. Make sure to use the `BTEditor` attribute to make them available in the editor context menu.
 ```csharp

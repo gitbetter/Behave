@@ -15,29 +15,4 @@ public static class EditorFactories
         }
         return newNode;
     }
-
-    public static Property PropertyFromString(string propName) {
-        Property prop;
-        switch (propName) {
-        case "Int":
-            prop = new IntProperty();
-            break;
-        case "Float":
-            prop = new FloatProperty();
-            break;
-        case "Bool":
-            prop = new BoolProperty();
-            break;
-        case "String":
-            prop = new StringProperty();
-            break;
-        case "Semaphore":
-            prop = new SemaphoreProperty();
-            break;
-        default:
-            prop = new IntProperty();
-            break;
-        }
-        return prop;
-    }
 }

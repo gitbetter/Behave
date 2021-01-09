@@ -41,6 +41,9 @@ public class PropertyConnection : Connection {
         if (inPoint.field != null) {
             PropertyNode propertyNode = outPoint.node as PropertyNode;
             TreeNode treeNode = inPoint.node as TreeNode;
+            if (treeNode.data.GetField(inPoint.field) != null) {
+                propertyNode.prop = Property.FromSavedProperty(treeNode.data.GetField(inPoint.field));
+            }
             treeNode.SetProperty(inPoint.field, propertyNode.prop);
         }
     }

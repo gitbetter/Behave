@@ -9,13 +9,13 @@ public class NodeData {
     public string typeName;
     public Vector2 editorPosition;    
     public List<string> childrenIds = new List<string>();
-    public AnyMap fields = new AnyMap();
+    public PropertyMap fields = new PropertyMap();
 
     private BTEditorAttribute editorAttributes;
+    private TreeGraph graphData;
 
-    public NodeData(System.Type objectType) {
+    public NodeData(System.Type objectType) : this() {
         this.typeName = objectType.AssemblyQualifiedName;
-        Initialize();
     }
 
     public NodeData() {
@@ -29,25 +29,48 @@ public class NodeData {
     public void AddChild(string id) {
         if (childrenIds.Contains(id)) return;
         childrenIds.Add(id);
+        Save();
     }
 
     public void RemoveChild(string id) {
         childrenIds.Remove(id);
+        Save();
     }
 
     public void SetParentId(string id) {
         parentId = id;
+        Save();
     }
 
-    public void SetField(string id, dynamic val) {
-        fields[id] = val;
+    public void SetField(string id, Property val) {
+        if (val == null && fields.ContainsKey(id)) {
+            fields.Remove(id);
+        } else {
+            fields[id] = val;
+        }
+        Save();
     }
 
-    public dynamic GetField(string id) {
+    public Property GetField(string id) {
         if (fields.ContainsKey(id)) {
             return fields[id];
         }
         return null;
+    }
+
+    public void SetEditorPosition(Vector2 pos) {
+        this.editorPosition = pos;
+        Save();
+    }
+
+    public void SetGraphData(TreeGraph graphData) {
+        this.graphData = graphData;
+    }
+
+    public void Save() {
+        if (this.graphData != null) {
+            this.graphData.Save();
+        }
     }
 
     public BTEditorAttribute GetEditorAttributes() {
@@ -62,4 +85,4 @@ public class NodeData {
 public class Nodetionary : SerializableDictionary<string, NodeData> { }
 
 [System.Serializable]
-public class AnyMap : SerializableDictionary<string, dynamic> { }
+public class PropertyMap : SerializableDictionary<string, Property> { }

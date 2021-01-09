@@ -193,8 +193,15 @@ public class TreeNode : Node {
     }
 
     public void SetProperty(string propName, Property prop) {
-        properties[propName] = prop;
-        this.data.fields[propName] = prop.value;
+        prop.name = propName;
+        properties[prop.name] = prop;
+        this.data.SetField(prop.name, prop);
+    }
+
+    public void UnsetProperty(Property prop) {
+        this.data.SetField(prop.name, null);
+        properties.Remove(prop.name);
+        prop.name = null;
     }
 }
 
@@ -211,7 +218,7 @@ public class PropertyNode : Node {
             null,
             0.5f,
             nodeParams.OnClickOutPoint));
-        this.prop = EditorFactories.PropertyFromString(this.data.GetEditorAttributes().title);
+        this.prop = Property.FromString(this.data.GetEditorAttributes().title);
     }
 
     protected override void DrawContents() {
@@ -219,22 +226,35 @@ public class PropertyNode : Node {
         if (prop is IntProperty) {
             IntProperty intProperty = prop as IntProperty;
             GUILayout.Label("value");
-            intProperty.value = EditorGUILayout.IntField(intProperty.value, GUILayout.MaxWidth(150));
+            intProperty.SetValue<int>(EditorGUILayout.IntField(intProperty.GetValue(), GUILayout.MaxWidth(150)));
         } else if (prop is FloatProperty) {
             FloatProperty floatProperty = prop as FloatProperty;
             GUILayout.Label("value");
-            floatProperty.value = EditorGUILayout.FloatField(floatProperty.value, GUILayout.MaxWidth(150));
+            floatProperty.SetValue<float>(EditorGUILayout.FloatField(floatProperty.GetValue(), GUILayout.MaxWidth(150)));
         } else if (prop is BoolProperty) {
             BoolProperty boolProperty = prop as BoolProperty;
             GUILayout.Label("true");
-            boolProperty.value = EditorGUILayout.Toggle(boolProperty.value, GUILayout.MaxWidth(150));
+            boolProperty.SetValue<bool>(EditorGUILayout.Toggle(boolProperty.GetValue(), GUILayout.MaxWidth(150)));
         } else if (prop is StringProperty) {
             StringProperty stringProperty = prop as StringProperty;
             GUILayout.Label("text");
-            stringProperty.value = EditorGUILayout.TextField(stringProperty.value, GUILayout.MaxWidth(150));
+            stringProperty.SetValue<string>(EditorGUILayout.TextField(stringProperty.GetValue(), GUILayout.MaxWidth(150)));
+        } else if (prop is Vector3Property) {
+            Vector3Property vector3Property = prop as Vector3Property;
+            vector3Property.SetValue<Vector3>(EditorGUILayout.Vector3Field("", vector3Property.GetValue(), GUILayout.MaxWidth(150)));
         } else if (prop is SemaphoreProperty) {
             
         }
         GUILayout.EndHorizontal();
+    }
+
+    protected override void ContextMenuLoad(GenericMenu contextMenu) {
+        contextMenu.AddItem(new GUIContent("Paste Values"), false, OnClickPasteValues);
+    }
+
+    private void OnClickPasteValues() {
+        if (!String.IsNullOrEmpty(EditorGUIUtility.systemCopyBuffer)) {
+            prop.SetValue(EditorGUIUtility.systemCopyBuffer);
+        }
     }
 }
