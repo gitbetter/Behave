@@ -107,25 +107,6 @@ public class CustomTaskWithProperties : Task {
 
 Take a look at the files in _Runtime/Data Structures/BehaviorTree_ to get a feel for the `Task` interface and how all the subclasses are implemented.
 
-## Extending Editor Properties
-
-The behavior tree editor also includes a set of visual properties that you can link into any node to provide values to fields. All of these properties extend from the abstract `Property` class, which has a single `object` field named `value`. The visual property types include:
-
-* IntProperty
-* FloatProperty
-* BoolProperty
-* StringProperty
-* SemaphoreProperty
-* Vector3Property
-
-You can extend the `Property` abstract class to define your own visual properties. Make sure to use the `BTEditor` attribute to make them available in the editor context menu.
-```csharp
-[BTEditor("Property/CustomProperty")] [System.Serializable]
-public class CustomProperty : Property {
-    public new CustomClassType value;
-}
-```
-
 ## Blackboards
 
 Behave includes a simple blackboard data structure definition to be used in saving and sharing data within your behavior trees or as a general centralized data store across your application. Simply create a new `Blackboard`, adding and accessing `BlackboardDatum` instances using the `Set` and `Get` methods, respectively. Here's an example that saves a character position into the blackboard
