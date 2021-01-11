@@ -18,16 +18,13 @@ public class ConnectionPoint
         this.OnClickConnectionPoint = OnClickConnectionPoint;
     }
 
-    public void Draw(Rect inRect) {    
-        Prepare(inRect);
+    public virtual void Draw(Rect inRect) {
         if (GUI.Button(rect, "", style)) {
             if (OnClickConnectionPoint != null) {
                 OnClickConnectionPoint(this);
             }
         }
     }
-
-    protected virtual void Prepare(Rect inRect) { }
 }
 
 public class TreeConnectionPoint : ConnectionPoint {
@@ -40,7 +37,7 @@ public class TreeConnectionPoint : ConnectionPoint {
         }
     }
 
-    protected override void Prepare(Rect inRect) {
+    public override void Draw(Rect inRect) {
         rect.x = node.rect.x + (node.rect.width * 0.5f) - rect.width * 0.5f;
 
         switch (type) {
@@ -51,6 +48,8 @@ public class TreeConnectionPoint : ConnectionPoint {
             rect.y = node.rect.y + node.rect.height - rect.height * 0.15f;
             break;
         }
+
+        base.Draw(inRect);
     }
 }
 
@@ -68,17 +67,17 @@ public class PropertyConnectionPoint : ConnectionPoint {
         this.field = field;
     }
 
-    protected override void Prepare(Rect inRect)
+    public override void Draw(Rect inRect)
     {
-        rect.y = inRect.y;
-        
-        switch (type) {
-        case Type.In:
-            rect.x = inRect.x - rect.width;
-            break;
-        case Type.Out:
-            rect.x = inRect.x + inRect.width;
-            break;
+        if (GUILayout.Button("", style, GUILayout.Width(rect.width), GUILayout.Height(rect.height))) {
+            if (OnClickConnectionPoint != null) {
+                OnClickConnectionPoint(this);
+            }
+        }
+        if (Event.current.type == EventType.Repaint) {
+            rect = GUILayoutUtility.GetLastRect();
+            rect.x += inRect.x;
+            rect.y += inRect.y;
         }
     }
 }

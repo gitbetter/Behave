@@ -48,6 +48,10 @@ public class Node
         data.editorPosition += delta;
     }
 
+    public void DragDone() {
+        data.SetEditorPosition(data.editorPosition);
+    }
+
     public void Draw() {
         BTEditorAttribute editorAttributes = data.GetEditorAttributes();
         GUI.Box(rect, editorAttributes.title, currentStyle);
@@ -58,7 +62,9 @@ public class Node
         DrawContents();
         GUILayout.EndArea();
         foreach (ConnectionPoint point in connectionPoints) {
-            point.Draw(this.contentAreaRect);
+            if (point is TreeConnectionPoint) {
+                point.Draw(this.contentAreaRect);
+            }
         }
     }
 
@@ -85,6 +91,7 @@ public class Node
 
         case EventType.MouseUp:
             isDragged = false;
+            DragDone();
             break;
 
         case EventType.MouseDrag:
@@ -98,44 +105,25 @@ public class Node
         return false;
     }
 
-    public ConnectionPoint FirstInPoint() {
-        foreach (ConnectionPoint p in connectionPoints) {
-            if (p.type == ConnectionPoint.Type.In)
-                return p;
-        }
-        return null;
+    public virtual ConnectionPoint FirstInPoint(Func<ConnectionPoint, bool> filter = null) {
+        return connectionPoints.Where(p => p.type == ConnectionPoint.Type.In && (filter != null ? filter(p) : true)).FirstOrDefault();
     }
 
-    public ConnectionPoint FirstMatchingInPoint(ConnectionPoint point) {
-        foreach (ConnectionPoint p in connectionPoints) {
-            if (p.type == ConnectionPoint.Type.In && p.GetType().IsAssignableFrom(point.GetType()))
-                return p;
-        }
-        return null;
+    public virtual ConnectionPoint FirstMatchingInPoint(ConnectionPoint point, Func<ConnectionPoint, bool> filter = null) {
+        return FirstInPoint(p => p.GetType().IsAssignableFrom(point.GetType()) && (filter != null ? filter(p) : true));
     }
 
-    public ConnectionPoint FirstOutPoint() {
-        foreach (ConnectionPoint p in connectionPoints) {
-            if (p.type == ConnectionPoint.Type.Out)
-                return p;
-        }
-        return null;
+    public virtual ConnectionPoint FirstOutPoint(Func<ConnectionPoint, bool> filter = null) {
+        return connectionPoints.Where(p => p.type == ConnectionPoint.Type.Out && (filter != null ? filter(p) : true)).FirstOrDefault();
     }
 
-    public ConnectionPoint FirstMatchingOutPoint(ConnectionPoint point) {
-        foreach (ConnectionPoint p in connectionPoints) {
-            if (p.type == ConnectionPoint.Type.Out && p.GetType().IsAssignableFrom(point.GetType()))
-                return p;
-        }
-        return null;
+    public virtual ConnectionPoint FirstMatchingOutPoint(ConnectionPoint point, Func<ConnectionPoint, bool> filter = null) {
+        return FirstOutPoint(p => p.GetType().IsAssignableFrom(point.GetType()) && (filter != null ? filter(p) : true));
     }
 
     public bool HasConnectionPoint(ConnectionPoint point) {
-        foreach (ConnectionPoint p in connectionPoints) {
-            if (point == p)
-                return true;
-        }
-        return false;
+        ConnectionPoint foundPoint = connectionPoints.Where(x => x == point).FirstOrDefault();
+        return foundPoint != null;
     }
 
     private void ProcessContextMenu() {
@@ -173,11 +161,11 @@ public class TreeNode : Node {
         ).ToArray();
         for (int i = 0; i < editableFields.Length; i++) {
             this.connectionPoints.Add(new PropertyConnectionPoint(
-                ConnectionPoint.Type.In,
+                ConnectionPoint.Type.Out,
                 this,
                 editableFields[i].Name,
-                (float) (i + 1) / (editableFields.Length + 1),
-                nodeParams.OnClickInPoint));
+                (float) (i) / (editableFields.Length),
+                nodeParams.OnClickOutPoint));
         }
         properties = new Dictionary<string, Property>();
     }
@@ -186,8 +174,12 @@ public class TreeNode : Node {
         // TODO: Draw Task type image, available in the data.editorAttributes.texture field
         for (int i = 0; i < editableFields.Length; i++) {
             GUILayout.BeginHorizontal();
+            PropertyConnectionPoint point = (PropertyConnectionPoint) FirstOutPoint(x => x is PropertyConnectionPoint && ((PropertyConnectionPoint)x).field == editableFields[i].Name);
+            if (point != null) {
+                point.Draw(this.contentAreaRect);
+            }
             GUILayout.Label(editableFields[i].Name);
-            GUILayout.Button(properties.ContainsKey(editableFields[i].Name) ? properties[editableFields[i].Name].GetType().FullName : "None", GUILayout.MaxWidth(150));
+            GUILayout.Button(editableFields[i].FieldType.Name, GUILayout.MaxWidth(150));
             GUILayout.EndHorizontal();
         }
     }
@@ -213,11 +205,11 @@ public class PropertyNode : Node {
         this.selectedNodeStyle = this.skin.GetStyle("SelectedPropertyNode");
         this.currentStyle = this.defaultNodeStyle;
         this.connectionPoints.Add(new PropertyConnectionPoint(
-            ConnectionPoint.Type.Out,
+            ConnectionPoint.Type.In,
             this,
             null,
             0.5f,
-            nodeParams.OnClickOutPoint));
+            nodeParams.OnClickInPoint));
         this.prop = Property.FromString(this.data.GetEditorAttributes().title);
     }
 
@@ -245,11 +237,28 @@ public class PropertyNode : Node {
         } else if (prop is SemaphoreProperty) {
             
         }
+        PropertyConnectionPoint point = (PropertyConnectionPoint) FirstInPoint(x => x is PropertyConnectionPoint);
+        if (point != null) {
+            point.Draw(this.contentAreaRect);
+        }
         GUILayout.EndHorizontal();
     }
 
     protected override void ContextMenuLoad(GenericMenu contextMenu) {
         contextMenu.AddItem(new GUIContent("Paste Values"), false, OnClickPasteValues);
+    }
+
+    public void SetProperty(Property prop) {
+        this.prop = prop;
+        SetPropertyFieldName(prop.name);
+    }
+
+    public void SetPropertyFieldName(string field) {
+        PropertyConnectionPoint inPoint = (PropertyConnectionPoint) FirstInPoint();
+        if (inPoint != null) {
+            inPoint.field = field;
+        }
+        this.data.SetAssociatedField(field);
     }
 
     private void OnClickPasteValues() {

@@ -38,13 +38,15 @@ public class TreeConnection : Connection {
 public class PropertyConnection : Connection {
     public PropertyConnection(PropertyConnectionPoint inPoint, PropertyConnectionPoint outPoint, Action<Connection> OnClickRemoveConnection)
     : base(inPoint, outPoint, OnClickRemoveConnection) {
-        if (inPoint.field != null) {
-            PropertyNode propertyNode = outPoint.node as PropertyNode;
-            TreeNode treeNode = inPoint.node as TreeNode;
-            if (treeNode.data.GetField(inPoint.field) != null) {
-                propertyNode.prop = Property.FromSavedProperty(treeNode.data.GetField(inPoint.field));
+        if (outPoint.field != null) {
+            PropertyNode propertyNode = inPoint.node as PropertyNode;
+            TreeNode treeNode = outPoint.node as TreeNode;
+            if (treeNode.data.GetField(outPoint.field) != null) {
+                propertyNode.SetProperty(Property.FromSavedProperty(treeNode.data.GetField(outPoint.field)));
+            } else {
+                propertyNode.SetPropertyFieldName(outPoint.field);
             }
-            treeNode.SetProperty(inPoint.field, propertyNode.prop);
+            treeNode.SetProperty(outPoint.field, propertyNode.prop);
         }
     }
 

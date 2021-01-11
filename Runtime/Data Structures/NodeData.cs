@@ -7,6 +7,7 @@ public class NodeData {
     public string id;
     public string parentId;
     public string typeName;
+    public string associatedField;
     public Vector2 editorPosition;    
     public List<string> childrenIds = new List<string>();
     public PropertyMap fields = new PropertyMap();
@@ -14,8 +15,9 @@ public class NodeData {
     private BTEditorAttribute editorAttributes;
     private TreeGraph graphData;
 
-    public NodeData(System.Type objectType) : this() {
+    public NodeData(System.Type objectType) {
         this.typeName = objectType.AssemblyQualifiedName;
+        Initialize();
     }
 
     public NodeData() {
@@ -24,12 +26,16 @@ public class NodeData {
 
     public void Initialize() {
         id = System.Guid.NewGuid().ToString();
+        if (this.typeName != null) {
+            id = this.typeName.Substring(0, this.typeName.IndexOf(',')) + "-" + id.Substring(0, id.IndexOf('-', id.IndexOf('-') + 1));
+        }
     }
 
     public void AddChild(string id) {
-        if (childrenIds.Contains(id)) return;
-        childrenIds.Add(id);
-        Save();
+        if (!childrenIds.Contains(id)) {
+            childrenIds.Add(id);
+            Save();
+        };
     }
 
     public void RemoveChild(string id) {
@@ -63,12 +69,19 @@ public class NodeData {
         Save();
     }
 
+    public void SetAssociatedField(string field) {
+        this.associatedField = field;
+        Save();
+    }
+
     public void SetGraphData(TreeGraph graphData) {
         this.graphData = graphData;
     }
 
     public void Save() {
+        Debug.Log("Here");
         if (this.graphData != null) {
+            Debug.Log("And here");
             this.graphData.Save();
         }
     }

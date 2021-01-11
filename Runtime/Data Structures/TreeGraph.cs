@@ -51,18 +51,20 @@ public class TreeGraph : ScriptableObject {
     public void AddNodeData(NodeData data) {
         if (!this.nodes.ContainsKey(data.id)) {
             this.nodes.Add(data.id, data);
+            data.SetGraphData(this);
             Save();
         }
     }
 
     public void RemoveNodeData(NodeData data) {
         this.nodes.Remove(data.id);
+        data.SetGraphData(null);
         Save(); 
     }
 
     public void Save() {
+        UnityEditor.AssetDatabase.Refresh();
         UnityEditor.EditorUtility.SetDirty(this);
         UnityEditor.AssetDatabase.SaveAssets();
-        UnityEditor.AssetDatabase.Refresh();
     }
 }

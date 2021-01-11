@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
@@ -195,7 +196,7 @@ public class BehaviorTreeEditor : EditorWindow {
         if (nodes == null) {
             nodes = new Dictionary<string, Node>();
         }
-        if (nodes.ContainsKey(data.id) && graphData.nodes.ContainsKey(data.id)) {
+        if (nodes.ContainsKey(data.id)) {
             return nodes[data.id];
         }
         NodeParams nodeParams = new NodeParams() {
@@ -256,10 +257,13 @@ public class BehaviorTreeEditor : EditorWindow {
         outPoint.node.data.AddChild(inPoint.node.data.id);
         inPoint.node.data.SetParentId(outPoint.node.data.id);
 
-        if (inPoint is TreeConnectionPoint && outPoint is TreeConnectionPoint) {
-            connections.Add(new TreeConnection(inPoint as TreeConnectionPoint, outPoint as TreeConnectionPoint, OnClickRemoveConnection));
-        } else if (inPoint is PropertyConnectionPoint && outPoint is PropertyConnectionPoint) {
-            connections.Add(new PropertyConnection(inPoint as PropertyConnectionPoint, outPoint as PropertyConnectionPoint, OnClickRemoveConnection));
+        bool exists = connections.Where(c => c.inPoint == inPoint && c.outPoint == outPoint).FirstOrDefault() != null;
+        if (!exists) {
+            if (inPoint is TreeConnectionPoint && outPoint is TreeConnectionPoint) {
+                connections.Add(new TreeConnection(inPoint as TreeConnectionPoint, outPoint as TreeConnectionPoint, OnClickRemoveConnection));
+            } else if (inPoint is PropertyConnectionPoint && outPoint is PropertyConnectionPoint) {
+                connections.Add(new PropertyConnection(inPoint as PropertyConnectionPoint, outPoint as PropertyConnectionPoint, OnClickRemoveConnection));
+            }   
         }
     }
 
@@ -291,11 +295,18 @@ public class BehaviorTreeEditor : EditorWindow {
 
             foreach (string id in entry.Value.childrenIds) {
                 if (!created.ContainsKey(id)) {
-                    selectedOutPoint = currentNode.FirstOutPoint();
                     NodeData childData = graphData.nodes[id];
-                    created.Add(id, CreateNode(childData));
+                    Node childNode = CreateNode(childData);
+                    created.Add(id, childNode);
+                    ConnectionPoint outPoint = currentNode.FirstOutPoint(p => !String.IsNullOrEmpty(childData.associatedField)
+                        ? (p is PropertyConnectionPoint && ((PropertyConnectionPoint)p).field == childData.associatedField)
+                        : true);
+                    ConnectionPoint inPoint = childNode.FirstMatchingInPoint(outPoint);
+                    CreateConnection(inPoint, outPoint);
                 } else {
-                    ConnectionPoint outPoint = currentNode.FirstOutPoint();
+                    ConnectionPoint outPoint = currentNode.FirstOutPoint(p => !String.IsNullOrEmpty(created[id].data.associatedField)
+                        ? (p is PropertyConnectionPoint && ((PropertyConnectionPoint)p).field == created[id].data.associatedField)
+                        : true);
                     ConnectionPoint inPoint = created[id].FirstMatchingInPoint(outPoint);
                     CreateConnection(inPoint, outPoint);
                 }
