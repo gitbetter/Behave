@@ -370,6 +370,19 @@ public class PerformInterruption : Task {
     }
 }
 
+[BTEditor("Behavior Tree/Linked Behavior Tree")]
+public class LinkedBehaviorTree : Decorator {
+    [BTEditable]
+    public TreeGraph reference;
+
+    public override bool Run(Blackboard blackboard) {
+        if (this.child == null) {
+            this.child = reference.Root;
+        }
+        return child.Run(blackboard);
+    }
+}
+
 public class BehaviorTree : Decorator
 {
     public Blackboard blackboard;

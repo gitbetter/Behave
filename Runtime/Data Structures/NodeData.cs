@@ -79,9 +79,7 @@ public class NodeData {
     }
 
     public void Save() {
-        Debug.Log("Here");
         if (this.graphData != null) {
-            Debug.Log("And here");
             this.graphData.Save();
         }
     }

@@ -5,11 +5,21 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "BehaviorTree", menuName = "Behavior Tree Editor/Behavior Tree", order = 1)]
 public class TreeGraph : ScriptableObject {
+    public string id;
     public Nodetionary nodes = new Nodetionary();
     
     public BehaviorTree Root { get {
         return GenerateBehaviorTree();
     }}
+
+    public TreeGraph() : base() {
+        this.id = System.Guid.NewGuid().ToString();
+        this.id = "BT-" + this.id.Substring(0, this.id.IndexOf('-', this.id.IndexOf('-') + 1));
+    }
+
+    public override string ToString() {
+        return id;
+    }
 
     BehaviorTree GenerateBehaviorTree() {
         NodeData rootNode = null;

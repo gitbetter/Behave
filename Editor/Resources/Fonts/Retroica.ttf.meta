@@ -1,16 +1,15 @@
 fileFormatVersion: 2
-guid: bb57f7fd88d01294ea24ed579d5b7f17
+guid: bfd46cc69cb1ee444a238a340d7d2466
 TrueTypeFontImporter:
   externalObjects: {}
   serializedVersion: 4
-  fontSize: 14
+  fontSize: 16
   forceTextureCase: -2
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Cocogoose
   fontNames:
-  - Cocogoose
+  - Retroica
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

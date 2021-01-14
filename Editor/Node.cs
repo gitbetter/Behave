@@ -215,28 +215,7 @@ public class PropertyNode : Node {
 
     protected override void DrawContents() {
         GUILayout.BeginHorizontal();
-        if (prop is IntProperty) {
-            IntProperty intProperty = prop as IntProperty;
-            GUILayout.Label("value");
-            intProperty.SetValue<int>(EditorGUILayout.IntField(intProperty.GetValue(), GUILayout.MaxWidth(150)));
-        } else if (prop is FloatProperty) {
-            FloatProperty floatProperty = prop as FloatProperty;
-            GUILayout.Label("value");
-            floatProperty.SetValue<float>(EditorGUILayout.FloatField(floatProperty.GetValue(), GUILayout.MaxWidth(150)));
-        } else if (prop is BoolProperty) {
-            BoolProperty boolProperty = prop as BoolProperty;
-            GUILayout.Label("true");
-            boolProperty.SetValue<bool>(EditorGUILayout.Toggle(boolProperty.GetValue(), GUILayout.MaxWidth(150)));
-        } else if (prop is StringProperty) {
-            StringProperty stringProperty = prop as StringProperty;
-            GUILayout.Label("text");
-            stringProperty.SetValue<string>(EditorGUILayout.TextField(stringProperty.GetValue(), GUILayout.MaxWidth(150)));
-        } else if (prop is Vector3Property) {
-            Vector3Property vector3Property = prop as Vector3Property;
-            vector3Property.SetValue<Vector3>(EditorGUILayout.Vector3Field("", vector3Property.GetValue(), GUILayout.MaxWidth(150)));
-        } else if (prop is SemaphoreProperty) {
-            
-        }
+        prop.Draw();
         PropertyConnectionPoint point = (PropertyConnectionPoint) FirstInPoint(x => x is PropertyConnectionPoint);
         if (point != null) {
             point.Draw(this.contentAreaRect);

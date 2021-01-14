@@ -51,6 +51,6 @@ public class PropertyConnection : Connection {
     }
 
     public override void Prepare() {
-        GraphHelpers.DrawLine(inPoint.rect.center, outPoint.rect.center, GraphHelpers.ConnectionStyle.Bezier);
+        GraphHelpers.DrawLine(outPoint.rect.center, inPoint.rect.center, GraphHelpers.ConnectionStyle.Bezier);
     }
 }
